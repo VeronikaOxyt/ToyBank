@@ -11,10 +11,6 @@ public class RequestHandler implements Runnable {
         this.bank = bank;
     }
 
-    public String getHandlerName() {
-        return handlerName;
-    }
-
     @Override
     public void run() {
         while (true) {

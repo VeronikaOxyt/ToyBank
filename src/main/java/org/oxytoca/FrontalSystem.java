@@ -1,33 +1,32 @@
 package org.oxytoca;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 public class FrontalSystem {
-    private final Queue<Request> requests = new ArrayDeque<>();
 
-    public synchronized void addRequest(Request request) {
-        while (requests.size() > 1) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        requests.add(request);
-        notifyAll();
+    /**
+     * Согласно заданию требуется подобрать коллекцию с
+     * механизмом блокировки, доступа FIFO и возможностью
+     * ограничить ее емкость (capacity). Подходит
+     * BlockingQueue.
+     */
+    private final BlockingQueue<Request> requestsQueue;
+
+    public FrontalSystem(int capacity) {
+        requestsQueue = new ArrayBlockingQueue<>(capacity);
     }
 
-    public synchronized Request getRequest() {
-        while (requests.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+
+    public void addRequest(Request request) throws InterruptedException {
+        requestsQueue.put(request);
+    }
+
+    public Request getRequest() {
+        try {
+            return requestsQueue.take();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
-        Request request = requests.poll();
-        notifyAll();
-        return request;
     }
 }

@@ -1,20 +1,26 @@
 package org.oxytoca;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import static java.lang.System.*;
 
 public class Bank {
-    private double balance;
+    private final AtomicLong balance = new AtomicLong(0);
 
-    public Bank(double balance) {
-        this.balance = balance;
+    public void setBalance(long balanceToLong) {
+        balance.updateAndGet((updatedBalance) -> balanceToLong);
     }
 
-    public synchronized void changeBalance(ActionsWithBalance action, String handlerName,
-                                           double amount, Request request) {
+    public AtomicLong getBalance() {
+        return balance;
+    }
+
+    public void changeBalance(ActionsWithBalance action, String handlerName,
+                                           long amount, Request request) {
         switch (action) {
             case CREDIT:
-                if (balance >= amount) {
-                    balance -= amount;
+                if (balance.get() >= amount) {
+                    balance.updateAndGet((balanceToLong) -> balanceToLong - amount);
                     out.println("Заявка " + request.toString() +
                             " УСПЕШНО ВЫПОЛНЕНА. " + "Баланс банка: " + balance);
                 } else out.println("Заявка " + request.toString() +
@@ -22,7 +28,7 @@ public class Bank {
                         + "Баланс банка: " + balance);
                 break;
             case REPAYMENT:
-                balance += amount;
+                balance.updateAndGet((balanceToLong) -> balanceToLong + amount);
                 out.println("Заявка " + request.toString() +
                         " УСПЕШНО ВЫПОЛНЕНА. Получена от " + handlerName
                         + ". Баланс банка: " + balance);

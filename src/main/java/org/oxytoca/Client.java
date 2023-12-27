@@ -20,7 +20,11 @@ public class Client implements Runnable {
 
     @Override
     public void run() {
-        frontalSystem.addRequest(request);
+        try {
+            frontalSystem.addRequest(request);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         System.out.println(request.getClientTreadName() + ": " + "заявка: " +
                 request.toString() + " отправлена в банк.");
     }

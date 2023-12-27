@@ -3,9 +3,9 @@ package org.oxytoca;
 public class Request {
     private final String clientTreadName;
     private final ActionsWithBalance requestType;
-    private final double amount;
+    private final long amount;
 
-    public Request(String clientTreadName, ActionsWithBalance requestType, double amount) {
+    public Request(String clientTreadName, ActionsWithBalance requestType, long amount) {
         this.clientTreadName = clientTreadName;
         this.requestType = requestType;
         this.amount = amount;
@@ -19,7 +19,7 @@ public class Request {
         return requestType;
     }
 
-    public double getAmount() {
+    public long getAmount() {
         return amount;
     }
 

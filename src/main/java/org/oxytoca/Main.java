@@ -1,11 +1,17 @@
 package org.oxytoca;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import static org.oxytoca.ActionsWithBalance.*;
 
 public class Main {
     public static void main(String[] args) {
-        FrontalSystem frontalSystem = new FrontalSystem();
-        Bank bank = new Bank(0);
+        FrontalSystem frontalSystem = new FrontalSystem(2);
+        Bank bank = new Bank();
+        ExecutorService executorService = Executors.newFixedThreadPool(4);
 
         Client client1 = new Client("Клиент №1", frontalSystem);
         Client client2 = new Client("Клиент №2", frontalSystem);
@@ -13,16 +19,15 @@ public class Main {
         Client client4 = new Client("Клиент №4", frontalSystem);
         Client client5 = new Client("Клиент №5", frontalSystem);
 
-        Thread threadOfClient1 = new Thread(client1);
-        Thread threadOfClient2 = new Thread(client2);
-        Thread threadOfClient3 = new Thread(client3);
-        Thread threadOfClient4 = new Thread(client4);
-        Thread threadOfClient5 = new Thread(client5);
+        RequestHandler requestHandler1 = new RequestHandler("Обработчик заявок №1",
+                frontalSystem, bank);
+        RequestHandler requestHandler2 = new RequestHandler("Обработчик заявок №2",
+                frontalSystem, bank);
 
-        Thread handlerThread1 = new Thread(new RequestHandler("Обработчик заявок №1",
-                frontalSystem, bank));
-        Thread handlerThread2 = new Thread(new RequestHandler("Обработчик заявок №2",
-                frontalSystem, bank));
+        List<TimeoutSystem> timeoutsList = new ArrayList<>();
+        timeoutsList.add(new TimeoutSystem(bank, bank.getBalance().get()));
+        timeoutsList.add(new TimeoutSystem(bank, bank.getBalance().get()));
+        timeoutsList.add(new TimeoutSystem(bank, bank.getBalance().get()));
 
         client1.setRequest(new Request(client1.getClientTreadName(), REPAYMENT, 10000));
         client2.setRequest(new Request(client2.getClientTreadName(), REPAYMENT, 15000));
@@ -30,14 +35,20 @@ public class Main {
         client4.setRequest(new Request(client4.getClientTreadName(), CREDIT, 5000));
         client5.setRequest(new Request(client5.getClientTreadName(), CREDIT, 150000));
 
-        threadOfClient1.start();
-        threadOfClient2.start();
-        threadOfClient3.start();
-        threadOfClient4.start();
-        threadOfClient5.start();
+        try {
+            executorService.invokeAll(timeoutsList);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
-        handlerThread1.start();
-        handlerThread2.start();
+        executorService.execute(client1);
+        executorService.execute(client2);
+        executorService.execute(client3);
+        executorService.execute(client4);
+        executorService.execute(client5);
+
+        executorService.execute(requestHandler1);
+        executorService.execute(requestHandler2);
     }
 
 }
